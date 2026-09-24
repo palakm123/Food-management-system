@@ -1,9 +1,9 @@
-// const { configureStore } = require("@reduxjs/toolkit");
+const { configureStore } = require("@reduxjs/toolkit");
 
-// const Store = configureStore({
-//     reducer: {
+const Store = configureStore({
+    // reducer: {
     
-//     },
-//     middleware:
-// })
-// export default Store;
+    // },
+    // middleware:
+})
+export default Store;
