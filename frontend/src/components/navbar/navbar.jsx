@@ -1,6 +1,16 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { AuthContext } from "../../../authContext/authContext";
+import { useContext } from "react";
 
 const Navbar= ()=>{
+    const navigate= useNavigate()
+    const{isLoggedIn,setIsLoggedIn}= useContext(AuthContext);
+
+    const handleSignOut=()=>{
+        localStorage.removeItem("token");
+        setIsLoggedIn(false)
+        navigate("/login")
+    }
 return(
     <>
     <div className="main-navbar">
@@ -18,14 +28,22 @@ return(
         </div>
 
         <div className="left">
-            <div className="btn">
-                 <button>Login</button>
-            </div>
+            {isLoggedIn ? (
+                <>
+                <Link to = "/profile">
+                Profile
+                </Link>
 
-            <div className="btn">
-                <button>SignUp</button>
-            </div>
-        
+                <button onClick={handleSignOut}>
+                    SignOut
+                </button>
+                </>
+            ):(
+                <>
+                <button onClick={()=>navigate("/signUp")}>SignUp</button>
+                <button onClick={()=>navigate("/login")}>Login</button>
+                </>
+            )}
            
         </div>
     </div>
