@@ -1,6 +1,7 @@
 const User = require("../models/User");
 const USER_STATUS = require("../helpers/enum");
 const jwt = require("jsonwebtoken");
+const { comparePassword } = require("../helpers/bcrypt");
 
 
 const login = async (req, res) => {
@@ -14,7 +15,7 @@ const login = async (req, res) => {
             })
         }
 
-        const isMatch = await User.comparePassword(password, user.password)
+        const isMatch = await comparePassword(password, user.password)
 
         if (!isMatch) {
             return res.status(USER_STATUS.UNAUTHORIZED).json({
@@ -32,11 +33,13 @@ const login = async (req, res) => {
                 expiresIn: "1d"
             }
         )
+        const userResponse= user.toObject();
+        delete userResponse.password
 
         res.status(USER_STATUS.OK).json({
             message: "User Login Successfully",
             token: token,
-            data: user
+            data: userResponse
         })
 
 

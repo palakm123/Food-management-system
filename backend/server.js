@@ -4,11 +4,13 @@ dotenv.config();
 const express = require("express");
 const cors = require("cors");
 const connectDb = require("./config/db");
-const authRouter = require("./routers/authRouter")
+const authRouter = require("./routers/authRouter");
+const userRouter= require("./routers/userRouter")
 const app = express();
 app.use(express.json());
 app.use(cors());
 app.use("/", authRouter)
+app.use("/",userRouter)
 connectDb()
 
 const PORT = process.env.PORT;

@@ -1,66 +1,98 @@
-import { useState } from "react";
-import {createUserWithEmailAndPassword,updateProfile} from "firebase/auth";
-import { auth } from "../config/firebase";
-import { useDispatch } from "react-redux";
-import { setUser } from "../redux/authSlice";
-import axios from "axios";
+import { useFormik } from "formik";
+import * as Yup from "yup";
+import { useSignUpMutation } from "../../../apis/authApis/authApi";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import { getIdToken, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 
-const Signup = () => {
-    const [name, setName] = useState("");
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const dispatch = useDispatch();
-    const signup = async (e) => {
-        e.preventDefault();
-        try {
-            const result = await createUserWithEmailAndPassword(
-                auth,
-                email,
-                password
-            );
-            await updateProfile(result.user, {
-                displayName: name
-            });
-            const token = await result.user.getIdToken();
-            const response = await axios.post(
-                "http://localhost:5000/api/auth/signup",
-                {
-                    name,
-                    email
-                },
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    }
-                }
-            );
-            dispatch(setUser(response.data.user));
-            alert("Signup successful!");
+const SignUp = () => {
+    const [signUp,{isLoading}] = useSignUpMutation()
+    const navigate= useNavigate()
+
+    const formik = useFormik({
+        initialValues: {
+            name:"",
+            email: "",
+            password: ""
+        },
+        validationSchema: Yup.object({
+            name: Yup.string().required("name should contain characters only"),
+            email: Yup.string().email("invalid email").required("email is required"),
+            password: Yup.string().min(6, "password must contain atleast 6 characters").required("password is required")
+        }),
+        onSubmit: async (values) => {
+            try {
+                const response = await signUp(values);
+        
+                console.log("response",response);
+                console.log("form submitted");
+                formik.resetForm()
+                toast.success("User signUp successfully")
+                 navigate("/login")
+
+            } catch (error) {
+                console.log(error);
+                toast.error(error?.data?.message || "signUp failed");
+
+            }
         }
-        catch (error) {
-            console.log(error);
-            alert(error.message);
-        }
+    })
+
+    const handleGoogleAuthentication=async()=>{
+          const provider = new GoogleAuthProvider();
+         provider.setCustomParameters({
+            prompt: "select_account"
+         });
+         const result = await signInWithPopup(auth,provider);
+         const user = result.user;
+         console.log("Google user",user);
+         const idToken= await user.getIdToken();
+         console.log("firebase idToken",idToken)
     }
     return (
         <>
-            <div className="signup">
-                <h1>Create Your Account</h1>
-                <p>Join us for a better food experience</p>
-                <form onSubmit={signup}>
-                    <input type="text" placeholder="Enter your full name" value={name} onChange={(e) => setName(e.target.value)} />
-                    <input type="email" placeholder="Enter your email" value={email} onChange={(e) => setEmail(e.target.value)} />
-                    <input type="password" placeholder="Enter your password" value={password} onChange={(e) => setPassword(e.target.value)} />
-                    <button type="submit">Sign Up</button>
-                </form>
-                <p>Or continue with</p>
-                <button>Google</button>
-                <button>Facebook</button>
-                <p>
-                    Already have an account? <span>Login</span>
-                </p>
+            <div className="main-login">
+                <h2>SignUp</h2>
+                <div className="main-form">
+                    <form onSubmit={formik.handleSubmit}>
+                         <div className="form-group">
+                            <label>Name:</label>
+                            <input type="text" name="name" value={formik.values.name} onChange={formik.handleChange} onBlur={formik.handleBlur} />
+                            {formik.touched.name && formik.errors.name && (<p>{formik.errors.name}</p>)}
+                        </div>
+
+                        <div className="form-group">
+                            <label>Email:</label>
+                            <input type="email" name="email" value={formik.values.email} onChange={formik.handleChange} onBlur={formik.handleBlur} />
+                            {formik.touched.email && formik.errors.email && (<p>{formik.errors.email}</p>)}
+                        </div>
+
+                        <div className="form-group">
+                            <label>Password:</label>
+                            <input type="password" name="password" value={formik.values.password} onChange={formik.handleChange} onBlur={formik.handleBlur} />
+                            {formik.touched.password && formik.errors.password && (<p>{formik.errors.password}</p>)}
+                        </div>
+
+                        <div className="btn">
+                            <button type="submit" disabled={isLoading}>
+                                {isLoading? "signing-up..": "signUp"}
+                            </button>
+                        </div>
+
+                          <div className="btn" onClick={handleGoogleAuthentication}>
+                            <button type="submit" >
+                                Continue with Google
+                            </button>
+                        </div>
+
+
+                    </form>
+                </div>
             </div>
+
+
+
         </>
     )
 }
-export default Signup;
+export default SignUp;

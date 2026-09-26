@@ -7,7 +7,7 @@ import { AuthContext } from "../../../authContext/authContext";
 import { toast } from "react-toastify";
 
 const Login = () => {
-    const [login, { isLoading, isError }] = useLoginMutation()
+    const [login, {isLoading}] = useLoginMutation()
     const {setIsLoggedIn}= useContext(AuthContext);
     const navigate= useNavigate()
 
@@ -32,6 +32,7 @@ const Login = () => {
 
             } catch (error) {
                 console.log(error)
+                toast.error(error?.data?.message || "Login Failed")
             }
         }
     })
@@ -43,19 +44,19 @@ const Login = () => {
                     <form onSubmit={formik.handleSubmit}>
                         <div className="form-group">
                             <label>User Email:</label>
-                            <input type="text" name="email" value={formik.values.email} onChange={formik.handleChange} onBlur={formik.handleBlur} />
+                            <input type="email" name="email" value={formik.values.email} onChange={formik.handleChange} onBlur={formik.handleBlur} />
                             {formik.touched.email && formik.errors.email && (<p>{formik.errors.email}</p>)}
                         </div>
 
                         <div className="form-group">
                             <label>User Password:</label>
-                            <input type="text" name="password" value={formik.values.password} onChange={formik.handleChange} onBlur={formik.handleBlur} />
+                            <input type="password" name="password" value={formik.values.password} onChange={formik.handleChange} onBlur={formik.handleBlur} />
                             {formik.touched.password && formik.errors.password && (<p>{formik.errors.password}</p>)}
                         </div>
 
                         <div className="btn">
-                            <button type="submit">
-                                Login
+                            <button type="submit" disabled={isLoading}>
+                                {isLoading? "LoggingIn..": "Login"}
                             </button>
                         </div>
 
